@@ -1,0 +1,185 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: xentari-postgres
+    environment:
+      POSTGRES_DB: xentari
+      POSTGRES_USER: xentari
+      POSTGRES_PASSWORD: xentari
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql
+    networks:
+      - xentari-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xentari -d xentari"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: xentari-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - xentari-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  eureka-server:
+    build:
+      context: ./infrastructure/eureka-server
+      dockerfile: Dockerfile
+    container_name: xentari-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - xentari-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build:
+      context: ./infrastructure/api-gateway
+      dockerfile: Dockerfile
+    container_name: xentari-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+    container_name: xentari-product
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xentari
+      SPRING_DATASOURCE_USERNAME: xentari
+      SPRING_DATASOURCE_PASSWORD: xentari
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: product_service
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: xentari-order
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xentari
+      SPRING_DATASOURCE_USERNAME: xentari
+      SPRING_DATASOURCE_PASSWORD: xentari
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: order_service
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  inventory-service:
+    build:
+      context: ./services/inventory-service
+      dockerfile: Dockerfile
+    container_name: xentari-inventory
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xentari
+      SPRING_DATASOURCE_USERNAME: xentari
+      SPRING_DATASOURCE_PASSWORD: xentari
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: inventory_service
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    container_name: xentari-payment
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/xentari
+      SPRING_DATASOURCE_USERNAME: xentari
+      SPRING_DATASOURCE_PASSWORD: xentari
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: payment_service
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: xentari-notification
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - xentari-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+
+networks:
+  xentari-network:
+    driver: bridge
