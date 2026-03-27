@@ -67,6 +67,7 @@ docker compose up --build
 | URL | Service |
 |-----|---------|
 | http://localhost:8080 | API Gateway |
+| http://localhost:8080/swagger-ui.html | Swagger UI (Aggregated) |
 | http://localhost:8761 | Eureka Dashboard |
 | http://localhost:15672 | RabbitMQ Management (guest/guest) |
 
@@ -81,6 +82,43 @@ curl -X POST http://localhost:8080/api/orders \
     ]
   }'
 ```
+
+## API Documentation
+
+### Swagger UI
+
+Interactive API documentation available at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+### Per-Service API Docs
+
+| Service | API Docs URL |
+|---------|-------------|
+| Product Service | http://localhost:8080/service/product/v3/api-docs |
+| Order Service | http://localhost:8080/service/order/v3/api-docs |
+| Inventory Service | http://localhost:8080/service/inventory/v3/api-docs |
+| Payment Service | http://localhost:8080/service/payment/v3/api-docs |
+
+### Postman
+
+Import the Postman collection and environment from the `postman/` directory:
+
+- `postman/Xentari.postman_collection.json`
+- `postman/Xentari_Local.postman_environment.json`
+
+See [Postman Guide](docs/guides/POSTMAN.md) for details.
+
+## Documentation
+
+- [Getting Started](docs/GETTING-STARTED.md) — Setup and first steps
+- [API Reference](docs/api/API.md) — All endpoints with examples
+- [Swagger UI Guide](docs/guides/SWAGGER.md) — How to use Swagger UI
+- [Postman Guide](docs/guides/POSTMAN.md) — How to use the Postman collection
+- [Event Flow](docs/architecture/EVENT-FLOW.md) — Event-driven architecture details
+- [Architecture](docs/architecture/ARCHITECTURE.md) — System design and decisions
 
 ## Database
 
@@ -98,15 +136,30 @@ Single PostgreSQL instance with schema-per-service isolation:
 ```
 xentari/
 ├── docker-compose.yml
+├── docs/
+│   ├── GETTING-STARTED.md
+│   ├── api/
+│   │   └── API.md
+│   ├── architecture/
+│   │   ├── ARCHITECTURE.md
+│   │   └── EVENT-FLOW.md
+│   └── guides/
+│       ├── SWAGGER.md
+│       └── POSTMAN.md
 ├── infrastructure/
 │   ├── eureka-server/
 │   └── api-gateway/
-├── services/
-│   ├── product-service/
-│   ├── order-service/
-│   ├── inventory-service/
-│   ├── payment-service/
-│   └── notification-service/
+├── postman/
+│   ├── Xentari.postman_collection.json
+│   └── Xentari_Local.postman_environment.json
+├── scripts/
+│   └── init-schemas.sql
+└── services/
+    ├── product-service/
+    ├── order-service/
+    ├── inventory-service/
+    ├── payment-service/
+    └── notification-service/
 ```
 
 ## Tech Stack
@@ -117,4 +170,5 @@ xentari/
 - **Database:** PostgreSQL 16
 - **Service Discovery:** Spring Cloud Netflix Eureka
 - **API Gateway:** Spring Cloud Gateway
+- **API Docs:** SpringDoc OpenAPI 2.8.5
 - **Containerization:** Docker + Docker Compose
