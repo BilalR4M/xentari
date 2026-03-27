@@ -6,6 +6,7 @@ import com.xentari.order.entity.Order;
 import com.xentari.order.event.OrderCreatedEvent;
 import com.xentari.order.service.EventPublisher;
 import com.xentari.order.service.OrderService;
+import com.xentari.order.service.ProductClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,10 +25,12 @@ public class OrderController {
 
     private final OrderService orderService;
     private final EventPublisher eventPublisher;
+    private final ProductClient productClient;
 
-    public OrderController(OrderService orderService, EventPublisher eventPublisher) {
+    public OrderController(OrderService orderService, EventPublisher eventPublisher, ProductClient productClient) {
         this.orderService = orderService;
         this.eventPublisher = eventPublisher;
+        this.productClient = productClient;
     }
 
     @PostMapping
@@ -36,7 +39,10 @@ public class OrderController {
     @ApiResponse(responseCode = "400", description = "Invalid order request")
     public ResponseEntity<OrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         List<OrderService.OrderItemData> itemDataList = request.items().stream()
-                .map(item -> new OrderService.OrderItemData(item.productId(), item.quantity(), BigDecimal.TEN))
+                .map(item -> {
+                    BigDecimal price = productClient.getProductPrice(item.productId());
+                    return new OrderService.OrderItemData(item.productId(), item.quantity(), price);
+                })
                 .toList();
 
         Order order = orderService.createOrder(itemDataList);
