@@ -35,6 +35,34 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: product-service-swagger
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/service/product/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: order-service-swagger
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/service/order/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: inventory-service-swagger
+          uri: lb://INVENTORY-SERVICE
+          predicates:
+            - Path=/service/inventory/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: payment-service-swagger
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/service/payment/v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
       default-filters:
         - name: RequestSize
           args:
@@ -48,6 +76,20 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+
+springdoc:
+  swagger-ui:
+    urls:
+      - url: /service/product/v3/api-docs
+        name: Product Service
+      - url: /service/order/v3/api-docs
+        name: Order Service
+      - url: /service/inventory/v3/api-docs
+        name: Inventory Service
+      - url: /service/payment/v3/api-docs
+        name: Payment Service
+  api-docs:
+    enabled: true
 
 management:
   endpoints:

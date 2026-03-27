@@ -6,6 +6,10 @@ import com.xentari.order.entity.Order;
 import com.xentari.order.event.OrderCreatedEvent;
 import com.xentari.order.service.EventPublisher;
 import com.xentari.order.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
+@Tag(name = "Orders", description = "Order lifecycle management with event-driven saga")
 public class OrderController {
 
     private final OrderService orderService;
@@ -26,6 +31,9 @@ public class OrderController {
     }
 
     @PostMapping
+    @Operation(summary = "Place a new order", description = "Creates an order and triggers the event-driven saga (inventory reservation, payment processing, notification)")
+    @ApiResponse(responseCode = "201", description = "Order placed successfully, saga initiated")
+    @ApiResponse(responseCode = "400", description = "Invalid order request")
     public ResponseEntity<OrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         List<OrderService.OrderItemData> itemDataList = request.items().stream()
                 .map(item -> new OrderService.OrderItemData(item.productId(), item.quantity(), BigDecimal.TEN))
@@ -43,12 +51,18 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
+    @Operation(summary = "Get order by ID", description = "Returns order details including current status")
+    @ApiResponse(responseCode = "200", description = "Order found")
+    @ApiResponse(responseCode = "404", description = "Order not found")
+    public ResponseEntity<OrderResponse> getOrder(
+            @Parameter(description = "Order ID") @PathVariable Long id) {
         Order order = orderService.getOrder(id);
         return ResponseEntity.ok(toResponse(order));
     }
 
     @GetMapping
+    @Operation(summary = "List all orders", description = "Returns all orders with their current status")
+    @ApiResponse(responseCode = "200", description = "Orders retrieved successfully")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderResponse> responses = orderService.getAllOrders().stream()
                 .map(this::toResponse)

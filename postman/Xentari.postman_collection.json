@@ -1,0 +1,435 @@
+{
+  "info": {
+    "name": "Xentari Microservices",
+    "description": "Xentari Event-Driven E-Commerce Microservice System\n\n## Architecture\n- **API Gateway**: http://localhost:8080 (single entry point)\n- **Eureka Dashboard**: http://localhost:8761\n- **RabbitMQ Management**: http://localhost:15672 (guest/guest)\n- **Swagger UI (Aggregated)**: http://localhost:8080/swagger-ui.html\n\n## Event Flow\n1. POST /api/orders → Order Created (PENDING)\n2. Inventory Service reserves stock → Stock Reserved\n3. Payment Service processes → Payment Completed\n4. Order Service confirms → Order Confirmed (CONFIRMED)\n5. Notification Service sends confirmation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "productServiceUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "orderServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "inventoryServiceUrl",
+      "value": "http://localhost:8083",
+      "type": "string"
+    },
+    {
+      "key": "paymentServiceUrl",
+      "value": "http://localhost:8084",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "API Gateway",
+      "description": "Requests routed through the API Gateway (port 8080)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["swagger-ui.html"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Service",
+      "description": "Product catalog CRUD operations",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mechanical Keyboard\",\n  \"description\": \"RGB backlit mechanical keyboard with Cherry MX switches\",\n  \"price\": 149.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mechanical Keyboard Pro\",\n  \"description\": \"Updated RGB backlit mechanical keyboard\",\n  \"price\": 179.99\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/6",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "6"]
+            }
+          }
+        },
+        {
+          "name": "Swagger API Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service/product/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["service", "product", "v3", "api-docs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Service",
+      "description": "Order lifecycle management with event-driven saga",
+      "item": [
+        {
+          "name": "Place Order (Happy Path)",
+          "description": "Place an order with valid product IDs. Triggers: OrderCreated → StockReserved → PaymentCompleted → OrderConfirmed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"productId\": 3,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Place Order (Stock Failure)",
+          "description": "Place an order with very high quantity to trigger stock failure",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 99999\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Swagger API Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service/order/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["service", "order", "v3", "api-docs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory Service",
+      "description": "Stock reservation and management",
+      "item": [
+        {
+          "name": "Get Inventory by Product ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", "1"]
+            }
+          }
+        },
+        {
+          "name": "Swagger API Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service/inventory/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["service", "inventory", "v3", "api-docs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment Service",
+      "description": "Payment processing and status",
+      "item": [
+        {
+          "name": "Get Payment by Order ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "1"]
+            }
+          }
+        },
+        {
+          "name": "Swagger API Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service/payment/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["service", "payment", "v3", "api-docs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "description": "Service discovery and messaging infrastructure",
+      "item": [
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761",
+              "host": ["http://localhost:8761"]
+            }
+          }
+        },
+        {
+          "name": "RabbitMQ Management",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:15672",
+              "host": ["http://localhost:15672"]
+            }
+          }
+        },
+        {
+          "name": "Eureka Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761/actuator/health",
+              "host": ["http://localhost:8761"],
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "E2E Test Flow",
+      "description": "End-to-end test flow to verify the complete event-driven saga",
+      "item": [
+        {
+          "name": "Step 1: Check Product Catalog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Step 2: Check Inventory for Product 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", "1"]
+            }
+          }
+        },
+        {
+          "name": "Step 3: Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Step 4: Wait for Saga (3s) - Check Order Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1"]
+            }
+          }
+        },
+        {
+          "name": "Step 5: Check Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "1"]
+            }
+          }
+        },
+        {
+          "name": "Step 6: Check Inventory After Reservation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
