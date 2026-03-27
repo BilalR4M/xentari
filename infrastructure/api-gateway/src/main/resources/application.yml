@@ -88,6 +88,7 @@ springdoc:
         name: Inventory Service
       - url: /service/payment/v3/api-docs
         name: Payment Service
+    url: /service/product/v3/api-docs
   api-docs:
     enabled: true
 
