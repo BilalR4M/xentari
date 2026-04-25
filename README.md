@@ -4,7 +4,7 @@ An event-driven e-commerce microservice system built with Java, Spring Boot, Rab
 
 ## Architecture
 
-Xentari is a choreography-based event-driven system where services communicate through asynchronous events via RabbitMQ. Each service owns its data, publishes domain events, and reacts to events from other services.
+Xentari is a choreography-based event driven system where services communicate through asynchronous events via RabbitMQ. Each service owns its data, publishes domain events, and reacts to events from other services.
 
 ### Services
 
