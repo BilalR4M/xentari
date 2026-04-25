@@ -107,7 +107,11 @@ The database is pre-populated with:
 - [Event Flow](architecture/EVENT-FLOW.md) — Event-driven architecture details
 - [Architecture](architecture/ARCHITECTURE.md) — System design and decisions
 
-## Troubleshooting
+## Contributors
+
+- [BilalR4M](https://github.com/BilalR4M)
+- IT22277190
+- Sudeepa Sandabhanu
 
 ### Services not registering with Eureka
 
