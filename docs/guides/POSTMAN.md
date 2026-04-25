@@ -30,8 +30,8 @@
 ## Collection Structure
 
 ### API Gateway
-- Health Check
-- Swagger UI
+- Health Check 
+- Detailed Swagger UI
 
 ### Product Service
 - Get All Products
@@ -84,7 +84,7 @@
 ### Stock Failure Test
 
 1. Run **Place Order (Stock Failure)** — uses quantity 99999
-2. Wait 2 seconds
+2. Wait 10 seconds
 3. Run **Get Order by ID** — verify status is `CANCELLED`
 
 ### Create and Order Test
