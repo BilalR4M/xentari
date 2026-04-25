@@ -9,7 +9,7 @@
 
 ## Import
 
-1. Open Postman
+1. Open Postman Client
 2. Click **Import** (top-left)
 3. Drag and drop both files or click **Upload Files**
 4. Select the **Xentari Local** environment (top-right dropdown)
