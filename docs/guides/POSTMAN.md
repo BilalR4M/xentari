@@ -84,7 +84,7 @@
 ### Stock Failure Test
 
 1. Run **Place Order (Stock Failure)** — uses quantity 99999
-2. Wait 2 seconds
+2. Wait 5 seconds
 3. Run **Get Order by ID** — verify status is `CANCELLED`
 
 ### Create and Order Test
