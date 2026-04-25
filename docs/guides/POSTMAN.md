@@ -30,8 +30,8 @@
 ## Collection Structure
 
 ### API Gateway
-- Health Check
-- Swagger UI
+- Health Check 
+- Detailed Swagger UI
 
 ### Product Service
 - Get All Products
