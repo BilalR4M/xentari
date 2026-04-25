@@ -4,7 +4,7 @@
 
 | File | Description |
 |------|-------------|
-| `postman/Xentari.postman_collection.json` | Full API collection |
+| `postman/Xentari.postman_collection.json` | Full API collection with details |
 | `postman/Xentari_Local.postman_environment.json` | Local environment variables |
 
 ## Import
